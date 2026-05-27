@@ -1,0 +1,77 @@
+CEFR Workshop License
+
+This repository contains software code, educational workshop materials, and
+instructions for using externally licensed data. These parts are licensed and
+restricted separately.
+
+1. Source code: MIT License
+---------------------------
+
+The Python source files, configuration files, scripts, and other software code
+in this repository are licensed under the MIT License:
+
+MIT License
+
+Copyright (c) 2026 Robert Gilks
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of the software code and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+2. Educational materials: non-commercial use
+-------------------------------------------
+
+The workshop text, README content, lesson structure, explanatory diagrams,
+notebooks, and other educational materials are made available for personal,
+educational, and internal training use only. You may copy and adapt them for
+non-commercial teaching, study, and evaluation provided that you retain
+attribution to Robert Gilks / Total Reality Engineering and do not imply
+endorsement.
+
+Commercial redistribution, resale, paid course packaging, or use as part of a
+commercial training product requires prior written permission.
+
+3. External corpus and trained model restrictions
+------------------------------------------------
+
+The Write & Improve Corpus 2024 and any other external datasets referenced by
+this repository are not included in this license. They remain governed by
+their own terms from their respective providers.
+
+In particular, materials in this repository document use of the Write &
+Improve Corpus 2024 from Cambridge University Press & Assessment. You are
+responsible for obtaining that corpus yourself and complying with its terms.
+Based on the restrictions documented in this repository:
+
+- the corpus may not be redistributed in this repository or elsewhere;
+- the corpus may not be used for commercial products;
+- model checkpoints or weights trained on the corpus may not be redistributed;
+- model checkpoints or weights trained on the corpus may not be used in a
+  commercial product unless the upstream corpus license explicitly permits it.
+
+4. Trademarks and third-party services
+--------------------------------------
+
+This license does not grant rights to the names, trademarks, service marks, or
+branding of Cambridge University Press & Assessment, Modal, Hugging Face,
+Microsoft, Total Reality Engineering, or any other third party.
+
+5. Conflicts
+------------
+
+If a file or directory carries a more specific license or attribution notice,
+that specific notice controls for that file or directory.

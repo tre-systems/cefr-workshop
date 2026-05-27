@@ -40,7 +40,7 @@ brew install uv
 
 #### 1. Clone and Install
 ```bash
-git clone https://github.com/rgilks/cefr-workshop.git
+git clone <this-repo>
 cd cefr-workshop
 
 # Install all dependencies (uv handles Python version automatically)
@@ -71,17 +71,17 @@ uv run python prepare_data.py \
 
 #### 4. Set Up Modal (Cloud GPUs)
 ```bash
-uv run modal setup              # Follow the prompts to authenticate
-uv run modal run hello_modal.py # Verify Modal works (prints "Hello from modal!")
+modal setup              # Follow the prompts to authenticate
+modal run hello_modal.py # Verify Modal works (should print "Hello from modal!")
 ```
 
 #### 5. Run Training
 ```bash
 # Quick test first (~5 min, verifies everything works)
-uv run modal run train.py --test-run
+modal run train.py --test-run
 
 # Then full training (~30-60 min on A10G GPU)
-uv run modal run train.py
+modal run train.py
 ```
 
 You're all set! Continue to [Part 1](#part-1-understanding-the-problem) to learn what you're building, or skip ahead to [Part 6](#part-6-training--evaluation) if you just want to train.
@@ -125,7 +125,7 @@ cefr-workshop/
 2. [The Dataset: Write & Improve Corpus](#part-2-the-dataset)
 3. [How DeBERTa Works (Conceptually)](#part-3-how-deberta-works)
 4. [Setting Up Modal](#part-4-setting-up-modal)
-5. [Understanding the Code](#part-5-understanding-the-code)
+5. [Building the Training Pipeline](#part-5-building-the-training-pipeline)
 6. [Training & Evaluation](#part-6-training--evaluation)
 7. [Deployment & Inference](#part-7-deployment--inference)
 8. [Additional Datasets](#-additional-datasets)
@@ -265,14 +265,15 @@ def train():
 
 ### Installation
 
-Modal is already included in the project dependencies (`pyproject.toml`). After running `uv sync`:
-
 ```bash
-# 1. Authenticate (creates ~/.modal.toml)
-uv run modal setup
+# 1. Install Modal
+pip install modal
 
-# 2. Verify
-uv run modal run --help
+# 2. Authenticate (creates ~/.modal.toml)
+modal setup
+
+# 3. Verify
+modal run --help
 ```
 
 ### Modal Concepts
@@ -286,7 +287,7 @@ uv run modal run --help
 
 ### Your First Modal Script
 
-The repo includes `hello_modal.py` to verify your Modal setup:
+Create `hello_modal.py`:
 
 ```python
 import modal
@@ -305,8 +306,8 @@ def main():
 
 Run it:
 ```bash
-uv run modal run hello_modal.py
-# Output: Hello from modal!
+modal run hello_modal.py
+# Output: Hello from modal-runner-xxx!
 ```
 
 ---
@@ -314,7 +315,7 @@ uv run modal run hello_modal.py
 
 ## Part 5: Understanding the Code
 
-The project contains five main Python files. Here's what each does:
+The project contains four main Python files. Here's what each does:
 
 ### `prepare_data.py` - Data Preparation
 
@@ -351,13 +352,6 @@ def train():
     # Training code here
 ```
 
-### `evaluate.py` - Model Evaluation
-
-Tests the trained model on held-out data:
-- Loads the best model from Modal volume
-- Runs batched inference on the test set
-- Reports MAE, QWK, exact accuracy, and per-level breakdown
-
 ### `serve.py` - API Deployment
 
 Deploys the trained model as a REST API:
@@ -373,13 +367,11 @@ Deploys the trained model as a REST API:
 
 ```bash
 # Quick test (verifies everything works, ~5 min)
-uv run modal run train.py --test-run
+modal run train.py --test-run
 
 # Full training (~30-60 min)
-uv run modal run train.py
+modal run train.py
 ```
-
-> **How `--test-run` works**: Modal forwards CLI arguments to the `@app.local_entrypoint()` function. The `test_run: bool = False` parameter is automatically converted from the `--test-run` flag. This is a standard Modal feature for parameterizing remote functions.
 
 ### Understanding the Output
 
@@ -423,35 +415,13 @@ An MAE of 0.4 means predictions are within half a CEFR level on average.
 After training, test your model on held-out data:
 
 ```bash
-uv run modal run evaluate.py
+modal run evaluate.py
 ```
 
 The `evaluate.py` script:
 - Loads your trained model from Modal volume
 - Runs predictions on all test essays
 - Reports MAE, QWK, and accuracy metrics
-
-Example output:
-```
-============================================================
-EVALUATION RESULTS
-============================================================
-Samples:           262
-MAE:               0.375
-QWK:               0.776
-Exact Accuracy:    71.8%
-Adjacent Accuracy: 99.6%
-
-Per-Level MAE:
-  A2: 0.856 (n=20)
-  B1: 0.391 (n=81)
-  B2: 0.252 (n=126)
-  C1: 0.264 (n=24)
-  C2: 1.024 (n=11)
-============================================================
-```
-
-> Note: Your results may vary slightly. A1 has no test samples. A2/C2 have higher error due to limited training data.
 
 ### Understanding QWK (Quadratic Weighted Kappa)
 
@@ -476,7 +446,7 @@ QWK measures agreement between predicted and actual CEFR levels:
 The `serve.py` file deploys your trained model as a REST API:
 
 ```bash
-uv run modal deploy serve.py
+modal deploy serve.py
 ```
 
 This gives you a persistent URL like `https://your-username--cefr-api-cefrservice-serve.modal.run`
@@ -487,13 +457,6 @@ This gives you a persistent URL like `https://your-username--cefr-api-cefrservic
 |----------|--------|-------------|
 | `/health` | GET | Check if model is loaded |
 | `/score` | POST | Score an essay |
-
-### Understanding the Response
-
-The `/score` endpoint returns three fields:
-- **`score`**: Numeric prediction on the 1.0-6.0 scale
-- **`cefr_level`**: The CEFR level derived from the score (A1-C2)
-- **`confidence`**: A heuristic based on how far the score is from the nearest CEFR boundary. Scores near boundaries (e.g., 2.48, right between A2 and B1) get `"low"` confidence, while scores firmly within a level (e.g., 3.1, clearly B1) get `"high"`. This is **not** a model calibration metric — it simply flags borderline cases.
 
 ### Testing the API
 
@@ -547,7 +510,7 @@ The model tends to underpredict C1 and C2 levels because the W&I corpus has very
 1. **Data augmentation**: Generate synthetic C1/C2 essays using GPT-4, or paraphrase existing ones
 2. **Class weighting**: Weight the loss function to penalize C1/C2 errors more heavily
 3. **[Ordinal regression](https://arxiv.org/abs/2111.08851)**: Use CORN or other ordinal loss functions that respect the A1→C2 ordering
-4. **[Larger model](https://huggingface.co/microsoft/deberta-v3-large)**: Try `microsoft/deberta-v3-large` (304M backbone params vs 86M for base)
+4. **[Larger model](https://huggingface.co/microsoft/deberta-v3-large)**: Try `microsoft/deberta-v3-large` (304M params vs 86M)
 5. **Ensemble**: Train 3-5 models with different seeds and average predictions
 6. **Additional data**: Combine with other corpora - see [Additional Datasets](#-additional-datasets) below
 
@@ -619,9 +582,32 @@ These datasets aren't CEFR-specific but may be useful for related essay scoring 
 - **[Kaggle ELL Feedback Prize](https://www.kaggle.com/competitions/feedback-prize-english-language-learning)** - Essays with trait-level scores
 - **[TOEFL11](https://catalog.ldc.upenn.edu/LDC2014T06)** - Essays with coarse proficiency labels (low/medium/high)
 
+
+
+---
+
+## ⚠️ Known Limitations & Improvements
+
+### The C1/C2 Problem
+
+The model tends to underpredict C1 and C2 levels because the W&I corpus has very few examples at these levels (~35 essays combined vs ~200 at B2). This is a common data imbalance issue.
+
+### Ways to Improve the Model
+
+1. **Data augmentation**: Generate synthetic C1/C2 essays using GPT-4, or paraphrase existing ones
+2. **Class weighting**: Weight the loss function to penalize C1/C2 errors more heavily
+3. **[Ordinal regression](https://arxiv.org/abs/2111.08851)**: Use CORN or other ordinal loss functions that respect the A1→C2 ordering
+4. **[Larger model](https://huggingface.co/microsoft/deberta-v3-large)**: Try `microsoft/deberta-v3-large` (304M params vs 86M)
+5. **Ensemble**: Train 3-5 models with different seeds and average predictions
+6. **Additional data**: See the "Additional Datasets" section above.
+
 ---
 
 ## ⚖️ License & Compliance Warning
+
+See [LICENSE](LICENSE) for the project license split: source code is MIT
+licensed, educational materials are non-commercial, and the corpus/model
+restrictions below remain binding.
 
 This project uses the **Write & Improve Corpus 2024** from Cambridge University Press & Assessment. By using this data, you agree to their [Terms and Conditions](https://englishlanguageitutoring.com/datasets/write-and-improve-corpus-2024).
 
