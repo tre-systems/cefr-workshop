@@ -14,8 +14,8 @@ app = modal.App("cefr-api")
 image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install(
-        "torch>=2.1.0",
-        "transformers>=4.40.0",
+        "torch>=2.6.0",
+        "transformers>=5.14.1",
         "fastapi>=0.104.0",
         "sentencepiece>=0.1.99",
     )
